@@ -12,13 +12,13 @@ def get_cnrt_func(job, option):
 
 
 class Cnrt:
-    def __init__(self, job, option):
+    def __init__(self, job, options):
         self.job = job
-        self.option = option
+        self.options = options
 
-        if self.option.get('calculator') == 'interval':
+        if self.options.get('calculator') == 'interval':
             self.func = self._interval
-        elif self.option.get('calculator') == 'custom':
+        elif self.options.get('calculator') == 'custom':
             self.func = self._custom
         else:
             raise InvalidOption()
@@ -27,25 +27,25 @@ class Cnrt:
         return self.func()
 
     def _interval(self):
-        if self.option.get('interval'):
+        if self.options.get('interval'):
             if self.job.next_run_time is None:
                 try:
-                    return self.option['start_time']
+                    return self.options['start_time']
                 except KeyError:
                     raise InvalidOption('start_time not fond')
             else:
-                return self.job.next_run_time + datetime.timedelta(seconds=self.option['interval'])
+                return self.job.next_run_time + datetime.timedelta(seconds=self.options['interval'])
         else:
             raise InvalidOption('interval not fond')
 
     def _custom(self):
 
         if not hasattr(self, '_custom_func'):
-            if self.option.get('custom_time_calculator'):
-                self._custom_func = self.option['custom_time_calculator']
+            if self.options.get('custom_time_calculator'):
+                self._custom_func = self.options['custom_time_calculator']
                 self._custom_func_sig = func_sig = signature(self._custom_func)
-                self._custom_func_args = self.option.get('args', ())
-                self._custom_func_kwargs = self.option.get('kwargs', {})
+                self._custom_func_args = self.options.get('args', ())
+                self._custom_func_kwargs = self.options.get('kwargs', {})
                 if (len(self._custom_func_args) + len(self._custom_func_kwargs) < len(
                         func_sig.parameters)) and func_sig.parameters.get('job') is not None:
                     self._custom_func_kwargs = {

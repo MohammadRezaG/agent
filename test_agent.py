@@ -20,7 +20,7 @@ def test_func_list_int_str(t):
 
 
 class TestAgent(TestCase):
-    option = {
+    options = {
         'calculator': 'interval',
         'start_time': datetime.datetime.now(),
         'interval': 1
@@ -29,9 +29,9 @@ class TestAgent(TestCase):
     def test_run_job_by_id_and_name(self):
         agent = Agent()
         t = [0, '0']
-        agent.create_job(func=test_func_list_int_str, option=TestAgent.option, args=(t,), name='norm1')
+        agent.create_job(func=test_func_list_int_str, options=TestAgent.options, args=(t,), name='norm1')
 
-        @agent.create_job_decorator(name='dec1', option=TestAgent.option, args=(t,))
+        @agent.create_job_decorator(options=TestAgent.options, args=(t,), name='dec1')
         def test_func_list_int_str_inner_and_job_is_running(t):
             c = t[0] + 1
             t[0] = c
@@ -54,7 +54,7 @@ class TestAgent(TestCase):
         agent = Agent()
         t = [1]
         print('job_id IS ' + str(id(t)))
-        agent.create_job(func=test_func, option=TestAgent.option, args=(t,))
+        agent.create_job(func=test_func, options=TestAgent.options, args=(t,))
         agent.start()
         print(t)
         time.sleep(1)
@@ -64,7 +64,7 @@ class TestAgent(TestCase):
     def test_interrupt(self):
         agent = Agent()
         t = [0, '0']
-        agent.create_job(func=test_func_list_int_str, option=TestAgent.option, args=(t,))
+        agent.create_job(func=test_func_list_int_str, options=TestAgent.options, args=(t,))
         agent.start()
         time.sleep(0.1)
         self.assertEqual([1, '1'], t)
@@ -83,7 +83,7 @@ class TestAgent(TestCase):
 
         if job.next_run_time is None:
             try:
-                r = job.option['start_time']
+                r = job.options['start_time']
             except KeyError:
                 raise KeyError('start_time not fond')
         else:
@@ -92,7 +92,7 @@ class TestAgent(TestCase):
         return r
 
     def test_custom_CNRT(self):
-        _option = {
+        _options = {
             'calculator': 'custom',
             'start_time': datetime.datetime.now(),
             'custom_time_calculator': self.custom_interval,
@@ -100,7 +100,7 @@ class TestAgent(TestCase):
         }
         agent = Agent()
         t = [0, '0']
-        agent.create_job(func=test_func_list_int_str, option=_option, args=(t,))
+        agent.create_job(func=test_func_list_int_str, options=_options, args=(t,))
         agent.start()
         time.sleep(0.1)
         self.assertEqual([1, '1'], t)

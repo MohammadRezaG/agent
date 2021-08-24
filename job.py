@@ -18,7 +18,7 @@ class Job:
     logger = None
     _initialized = False
 
-    def __init__(self, agent, job_id, name, func, option, is_enable, args, kwargs):
+    def __init__(self, agent, job_id, name, func, options, is_enable, args, kwargs):
         if Job.logger is None:
             agent.get_logger()
         self._logger = agent.logger
@@ -32,10 +32,10 @@ class Job:
             'LastRunState': LastRuntimeState.never_executed,
             'LastRuntime': None
         }
-        self.option = option
+        self.options = options
         self._func = func
         self.next_run_time = None
-        self._calculate_next_run_time = get_cnrt_func(self, option)
+        self._calculate_next_run_time = get_cnrt_func(self, options)
         self.next_run_time = self._calculate_next_run_time()
         self.is_running = Event()
         self.is_enable = is_enable
@@ -77,8 +77,23 @@ class Job:
             raise DuplicateName()
 
     def start(self):
-        self.job_thread = Thread(target=self._job_run, daemon=self.option.get('daemon', True), name=self._name)
+        self.job_thread = Thread(target=self._job_run, daemon=self.options.get('daemon', True), name=self._name)
         self.job_thread.start()
+
+    @property
+    def name(self):
+        assert self._initialized, "job.__init__() not called"
+        return self._name
+
+    @name.setter
+    def name(self, val):
+        if not self._initialized:
+            raise RuntimeError("Agent.__init__() not called")
+
+        if self.is_running.is_set():
+            raise PermissionError('cannot set name of active job')
+        else:
+            self._name = val
 
     @property
     def initialized(self):

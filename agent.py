@@ -79,7 +79,7 @@ class Agent:
         Agent.logger.setLevel(logging.ERROR)
         return Agent.logger
 
-    def _add_job(self, func, option, is_enable, args, kwargs, name):
+    def _add_job(self, func, options, is_enable, args, kwargs, name):
         self._jobs_id_counter += 1
         job_id = self._jobs_id_counter
         if name is None:
@@ -87,14 +87,14 @@ class Agent:
         if self.get_job_by_name(name) is not None:
             raise exceptions.DuplicateName('job name must be unique')
 
-        self.jobs.append(Job(self, job_id, name, func, option, is_enable, args, kwargs))
+        self.jobs.append(Job(self, job_id, name, func, options, is_enable, args, kwargs))
 
-    def create_job(self, func, option: dict, args=(), kwargs=None, is_enable: bool = True, name: str = None):
-        self._add_job(func, option, is_enable, args, kwargs, name)
+    def create_job(self, func, options: dict, args=(), kwargs=None, is_enable: bool = True, name: str = None):
+        self._add_job(func, options, is_enable, args, kwargs, name)
 
-    def create_job_decorator(self, option: dict, args=(), kwargs=None, is_enable: bool = True, name: str = None):
+    def create_job_decorator(self, options: dict, args=(), kwargs=None, is_enable: bool = True, name: str = None):
         def decorator(func):
-            self._add_job(func, option, is_enable, args, kwargs, name)
+            self._add_job(func, options, is_enable, args, kwargs, name)
             return func
 
         return decorator
@@ -167,7 +167,8 @@ class Agent:
         initial name is set by the constructor.
 
         """
-        assert self._initialized, "Agent.__init__() not called"
+        if not self._initialized:
+            raise RuntimeError("Agent.__init__() not called")
         return self._name
 
     @name.setter

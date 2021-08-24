@@ -31,6 +31,7 @@ class Job:
             'name': self._name,
             'LastRunState': LastRuntimeState.never_executed,
             'LastRuntime': None
+
         }
         self.options = options
         self._func = func
@@ -57,7 +58,7 @@ class Job:
             self._calculate_next_run_time()
             self.is_running.set()
             self._logger.info(f'executing job {self._name} function')
-            self._func(*self._args, **self._kwargs)
+            self.status['last_return'] = self._func(*self._args, **self._kwargs)
             self.is_running.clear()
         except Exception as E:
             print(E)

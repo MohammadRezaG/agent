@@ -143,7 +143,7 @@ class Agent:
             raise RuntimeError("Agent can only be started once")
 
         self._logger.info('agent starting')
-        threading.Thread(target=self._agent, daemon=self._daemon).start()
+        threading.Thread(target=self._agent, daemon=self._daemon,name=self._name).start()
         self._started.set()
 
     def stop(self):

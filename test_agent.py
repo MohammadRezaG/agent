@@ -114,4 +114,18 @@ class TestAgent(TestCase):
         time.sleep(3)
         self.assertEqual([2, '2'], t)
 
+    def test_job_return(self):
+        agent = Agent()
+
+        @agent.create_job_decorator(options=TestAgent.options, name='job_1')
+        def test_func_list_int_str_inner_and_job_is_running():
+            time.sleep(4)
+            return 5
+
+        agent.start()
+        job = agent.get_job_by_name('job_1')
+        self.assertIsNone(job.status.get('last_return'))
+        time.sleep(4)
+        print(job.status.get('last_return'))
+        self.assertEqual(job.status.get('last_return'),5)
 # TestAgent.test_custom_CNRT(TestAgent)

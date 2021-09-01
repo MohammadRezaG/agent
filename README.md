@@ -7,7 +7,7 @@ Inspired by this project https://github.com/sankalpjonn/timeloop
 
 ## Installation
 ```
-copy all files and import agent
+pip install agent-Job-scheduler
 ```
 
 ##creating options

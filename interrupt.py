@@ -13,12 +13,12 @@ class BaseInterrupt(Event):
 
     @agent.setter
     def agent(self, val):
-        raise PermissionError('do not change agent')
+        raise PermissionError('cannot set Agent')
 
     # Deleter method
     @agent.deleter
     def agent(self):
-        raise PermissionError('do not delete agent')
+        raise PermissionError('cannot delete agent')
 
     def interrupt_handler(self):
         """

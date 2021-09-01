@@ -1,7 +1,8 @@
-from unittest import TestCase
-from agent import Agent
 import datetime
 import time
+from unittest import TestCase
+
+from agent import Agent
 
 
 def test_func(t):
@@ -119,13 +120,59 @@ class TestAgent(TestCase):
 
         @agent.create_job_decorator(options=TestAgent.options, name='job_1')
         def test_func_list_int_str_inner_and_job_is_running():
-            time.sleep(4)
+            time.sleep(1)
             return 5
 
         agent.start()
         job = agent.get_job_by_name('job_1')
         self.assertIsNone(job.status.get('last_return'))
-        time.sleep(4)
+        time.sleep(2)
         print(job.status.get('last_return'))
-        self.assertEqual(job.status.get('last_return'),5)
-# TestAgent.test_custom_CNRT(TestAgent)
+        self.assertEqual(job.status.get('last_return'), 5)
+
+    def test_job_fail_handler(self):
+        def jfh(exception, job):
+            job.status['jfh'] = 'Test'
+            job.status['exception'] = exception
+
+        options = {
+            'calculator': 'interval',
+            'start_time': datetime.datetime.now(),
+            'interval': 1,
+            'job_fail_handler': {
+                'Handler': 'custom',
+                'custom_job_fail_Handler': jfh
+            }
+        }
+        agent = Agent()
+
+        @agent.create_job_decorator(options=options, name='job_1')
+        def test_func_list_int_str_inner_and_job_is_running():
+            time.sleep(1)
+            raise Exception('test_exception')
+
+        agent.start()
+        job = agent.get_job_by_name('job_1')
+        self.assertIsNone(job.status.get('jfh'))
+        time.sleep(2)
+        print(job.status.get('last_return'))
+        self.assertEqual(job.status.get('jfh'), 'Test')
+
+    def test_job_stop(self):
+
+        agent = Agent()
+
+        @agent.create_job_decorator(options=self.options, name='job_1')
+        def test_func_list_int_str_inner_and_job_is_running():
+            time.sleep(100)
+            return 10
+
+        job = agent.get_job_by_name('job_1')
+        time.sleep(0.5)
+        job.start()
+        time.sleep(0.5)
+        job.stop(2)
+        time.sleep(2.5)
+        print(job.status)
+        self.assertIsNone(job.status.get('last_return'))
+# TestAgent.test_job_fail_handler(TestAgent)

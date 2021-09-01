@@ -101,7 +101,7 @@ class Agent:
 
     def get_job_by_name(self, job_name: str):
         for job in self.jobs:
-            if job.status['name'] == job_name:
+            if job.name == job_name:
                 return job
         else:
             return None

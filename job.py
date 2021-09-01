@@ -4,8 +4,8 @@ from threading import Thread, Event
 import datetime
 from inspect import signature
 from enum import Enum
-from CNRT import get_cnrt_func
-from exceptions import DuplicateName
+from Handler import Cnrt, JobFailHandler
+from exceptions import DuplicateName, JobNotRunning
 
 
 class LastRuntimeState(Enum):
@@ -36,7 +36,8 @@ class Job:
         self.options = options
         self._func = func
         self.next_run_time = None
-        self._calculate_next_run_time = get_cnrt_func(self, options)
+        self._calculate_next_run_time = Cnrt(self, options)
+        self._job_fail_handler = JobFailHandler(self, options=options)
         self.next_run_time = self._calculate_next_run_time()
         self.is_running = Event()
         self.is_enable = is_enable
@@ -63,7 +64,7 @@ class Job:
         except Exception as E:
             print(E)
             self.status['LastRunState'] = LastRuntimeState.failed
-            self._logger.info(f'job {self._name} failed', exc_info=True)
+            self._job_fail_handler(exception=E)
             return 0
         else:
             self._logger.info(f'job {self._name} execute successfully')
@@ -71,15 +72,34 @@ class Job:
         finally:
             self.status['LastRuntime'] = datetime.datetime.now()
 
-    def stop(self):
+    def stop(self, timeout: float = 10, silence_error=None):
+        """
+        stop job Thread if is is_running == True
+        this function use threading join for stopping the Job Thread
+        if is_running == False this function raise JobNotRunning but you can use silence_error
+
+        if silence_error Not None than return  silence_error
+        :param timeout: wait before kill job Thread by default is set to 10
+        :param silence_error: None for raise JobNotRunning() or return silence_error if not none
+        :return: 1 if successful None if not
+        """
         if self.is_running:
-            self.job_thread.join(10)
+            self.job_thread.join(timeout=timeout)
+            return 1
         else:
-            raise DuplicateName()
+            if silence_error:
+                return None
+            raise JobNotRunning()
 
     def start(self):
+        """
+        start job in a another Thread whit name of job
+        by default daemon is set to True you can change this in options
+        :return: 1 if successful
+        """
         self.job_thread = Thread(target=self._job_run, daemon=self.options.get('daemon', True), name=self._name)
         self.job_thread.start()
+        return 1
 
     @property
     def name(self):
@@ -97,10 +117,18 @@ class Job:
             self._name = val
 
     @property
-    def initialized(self):
+    def id(self):
         assert self._initialized, "job.__init__() not called"
+        return self._id
+
+    @id.setter
+    def id(self, val):
+        raise PermissionError('cannot set job.id')
+
+    @property
+    def initialized(self):
         return self._initialized
 
     @initialized.setter
     def initialized(self, val):
-        raise PermissionError('Do not change job.initialized')
+        raise PermissionError('cannot set job.initialized')

@@ -15,7 +15,7 @@
 # ------------------------------------------------------------------------------
 # Name: interrupt.py
 # Description: contain necessary Handler for job and agent
-# Version: 0.0.4
+# Version: 0.1.0
 # Author: Mohammad Reza Golsorkhi
 # ------------------------------------------------------------------------------
 

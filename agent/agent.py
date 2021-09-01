@@ -15,7 +15,7 @@
 # ------------------------------------------------------------------------------
 # Name: agent.py
 # Description: A agent that handles jobs and run jobs
-# Version: 0.0.5
+# Version: 0.1.0
 # Author: Mohammad Reza Golsorkhi
 # ------------------------------------------------------------------------------
 

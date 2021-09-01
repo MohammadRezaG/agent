@@ -8,21 +8,28 @@ def readme():
 
 setup(
     name='agent_Job_scheduler',
-    version='0.0.10',
+    version='0.1.0.dev1',
     packages=['agent'],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3',
     ],
-    url='https://github.com/MohammadRezaG/agent',
+    keywords='tasks jobs periodic task interval periodic job flask style decorator agent job scheduler time agent_Job agent_Job_scheduler',
+
+    project_urls={
+        'Documentation':'https://github.com/MohammadRezaG/agent/wiki',
+        'Source': 'https://github.com/MohammadRezaG/agent',
+        'Tracker': 'https://github.com/MohammadRezaG/agent/issues',
+    },
     license='Apache License 2.0',
     author='Mohammad Reza Golsorkhi',
     author_email='Mgol2077@outlook.com',
     description='agent is a python job scheduler',
     long_description=readme(),
-    keywords='funniest joke comedy flying circus',
+    python_requires='>=3',
     test_suite='nose.collector',
     tests_require=['nose'],
-    include_package_data=True
+    include_package_data=True,
+    zip_safe=True
 )

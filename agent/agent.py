@@ -1,3 +1,25 @@
+# ------------------------------------------------------------------------------
+# Copyright 2021 Mohammad Reza Golsorkhi
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ------------------------------------------------------------------------------
+# Name: agent.py
+# Description: A agent that handles jobs and run jobs
+# Version: 0.0.5
+# Author: Mohammad Reza Golsorkhi
+# ------------------------------------------------------------------------------
+
+
 import datetime
 import threading
 import time
@@ -143,7 +165,7 @@ class Agent:
             raise RuntimeError("Agent can only be started once")
 
         self._logger.info('agent starting')
-        threading.Thread(target=self._agent, daemon=self._daemon,name=self._name).start()
+        threading.Thread(target=self._agent, daemon=self._daemon, name=self._name).start()
         self._started.set()
 
     def stop(self):

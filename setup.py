@@ -15,7 +15,7 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3',
     ],
-    keywords='tasks jobs periodic task interval periodic job flask style decorator agent job scheduler time agent_Job agent_Job_scheduler',
+    keywords='tasks jobs periodic task interval periodic_job periodicjob flask style decorator agent job scheduler time agent_Job agent_Job_scheduler',
 
     project_urls={
         'Documentation':'https://github.com/MohammadRezaG/agent/wiki',

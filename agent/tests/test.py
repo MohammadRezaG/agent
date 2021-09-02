@@ -44,7 +44,7 @@ def test_func_list_int_str(t):
 
 class TestAgent(TestCase):
     options = {
-        'calculator': 'interval',
+        'scheduler': 'interval',
         'start_time': datetime.datetime.now(),
         'interval': 1
     }
@@ -116,9 +116,9 @@ class TestAgent(TestCase):
 
     def test_custom_CNRT(self):
         _options = {
-            'calculator': 'custom',
+            'scheduler': 'custom',
             'start_time': datetime.datetime.now(),
-            'custom_time_calculator': self.custom_interval,
+            'custom_time_scheduler': self.custom_interval,
             'args': (1,)
         }
         agent = Agent()
@@ -158,7 +158,7 @@ class TestAgent(TestCase):
             job.status['exception'] = exception
 
         options = {
-            'calculator': 'interval',
+            'scheduler': 'interval',
             'start_time': datetime.datetime.now(),
             'interval': 1,
             'job_fail_handler': {

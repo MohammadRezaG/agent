@@ -14,7 +14,7 @@ copy all files and import agent
 ```python
 import  datetime
 options = {
-        'calculator': 'interval',
+        'scheduler': 'interval',
         'start_time': datetime.datetime.now(),
         'interval': 1
     }

@@ -7,7 +7,7 @@ quick start ::
     >>> a = agent.Agent()
     >>> import  datetime
     >>> options = {
-    ... 'calculator': 'interval',
+    ... 'scheduler': 'interval',
     ... 'start_time': datetime.datetime.now(),
     ... 'interval': 1
     ... }

@@ -8,7 +8,14 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "test_agent.py",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "test.py",
+            "type": "python",
+            "request": "launch",
+            "program": "agent\\test.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }

@@ -15,12 +15,11 @@
 # ------------------------------------------------------------------------------
 # Name: interrupt.py
 # Description: contain necessary Handler for job and agent
-# Version: 0.1.0
+# Version: 0.1.1
 # Author: Mohammad Reza Golsorkhi
 # ------------------------------------------------------------------------------
-
-
-from threading import Event
+import logging
+from threading import Event, Lock
 
 
 class BaseInterrupt(Event):
@@ -28,6 +27,7 @@ class BaseInterrupt(Event):
     def __init__(self, agent):
         super().__init__()
         self._agent = agent
+        self.lock = Lock()
 
     @property
     def agent(self):
@@ -52,19 +52,24 @@ class BaseInterrupt(Event):
 class StopInterrupt(BaseInterrupt):
 
     def interrupt_handler(self):
-        print('StopInterrupt interrupt_handler was run')
+        logging.log(level=logging.INFO, msg=f'StopInterrupt interrupt_handler was run for agent {self.agent}')
         for job in self.agent.get_all_running_jobs():
             job.job_thread.join()
 
+
+class RunJobNow(BaseInterrupt):
+    def __init__(self, agent, job):
+        super().__init__(agent)
+        self.job = job
+
+    def interrupt_handler(self):
+        self.agent.run_job(self.job)
 
 class NoneInterrupt(BaseInterrupt):
     """
     this Interrupt is for empty Interrupt
     and must only called in agent init phase
     """
-
-    def __init__(self):
-        Event.__init__(self)
 
     def interrupt_handler(self):
         pass

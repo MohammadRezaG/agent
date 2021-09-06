@@ -15,7 +15,7 @@
 # ------------------------------------------------------------------------------
 # Name: test.py
 # Description: test the functionality of agent and job and other part of package
-# Version: 0.0.6
+# Version: 0.1.1
 # Author: Mohammad Reza Golsorkhi
 # ------------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@ import datetime
 import time
 from unittest import TestCase
 
-from agent.agent import Agent
+from ..agent import Agent
 
 
 def test_func(t):
@@ -52,16 +52,17 @@ class TestAgent(TestCase):
     def test_run_job_by_id_and_name(self):
         agent = Agent()
         t = [0, '0']
-        agent.create_job(func=test_func_list_int_str, options=TestAgent.options, args=(t,), name='norm1')
+        agent.create_job(func=test_func_list_int_str,
+                         options=TestAgent.options, args=(t,), name='norm2')
 
-        @agent.create_job_decorator(options=TestAgent.options, args=(t,), name='dec1')
+        @agent.create_job_decorator(options=TestAgent.options, args=(t,), name='dec2')
         def test_func_list_int_str_inner_and_job_is_running(t):
             c = t[0] + 1
             t[0] = c
             t[1] = str(c)
             time.sleep(2)
 
-        agent.run_job_by_name('norm1')
+        agent.run_job_by_name('norm2')
         time.sleep(2.1)
         self.assertEqual([1, '1'], t)
 
@@ -84,10 +85,11 @@ class TestAgent(TestCase):
         # self.assertIn('in test func 1', t)
         agent.stop()
 
-    def test_interrupt(self):
+    def test_agent_stop(self):
         agent = Agent()
         t = [0, '0']
-        agent.create_job(func=test_func_list_int_str, options=TestAgent.options, args=(t,))
+        agent.create_job(func=test_func_list_int_str,
+                         options=TestAgent.options, args=(t,))
         agent.start()
         time.sleep(0.1)
         self.assertEqual([1, '1'], t)
@@ -123,9 +125,10 @@ class TestAgent(TestCase):
         }
         agent = Agent()
         t = [0, '0']
-        agent.create_job(func=test_func_list_int_str, options=_options, args=(t,))
+        agent.create_job(func=test_func_list_int_str,
+                         options=_options, args=(t,))
         agent.start()
-        time.sleep(0.1)
+        time.sleep(0.5)
         self.assertEqual([1, '1'], t)
         print(t)
         time.sleep(3)
@@ -168,28 +171,108 @@ class TestAgent(TestCase):
         }
         agent = Agent()
 
-        @agent.create_job_decorator(options=options, name='job_1')
-        def test_func_list_int_str_inner_and_job_is_running():
-            time.sleep(1)
+    def test_job_restart_after_fail_force_restart_job(self):
+        from agent.handler import JobFailHandler
+
+        options = {
+            'scheduler': 'interval',
+            'start_time': datetime.datetime.now(),
+            'interval': 100,
+            'job_fail_handler': {
+                'Handler': 'restart_after_fail',
+                'num_restart_trys_after_fail': 2,
+                'overwrite_agent_not_running': JobFailHandler.OverwriteAgentNotRunning.force_restart_job
+            }
+        }
+        agent = Agent()
+
+        @agent.create_job_decorator(options=options, name='job_3')
+        def test_func_list_int_str_inner_and_job_is_running(job):
+            time.sleep(0.5)
+            if job.status.get('jfh'):
+                job.status['jfh'] = int(job.status['jfh']) + 1
+
+            else:
+                job.status['jfh'] = 1
             raise Exception('test_exception')
 
-        agent.start()
-        job = agent.get_job_by_name('job_1')
+        job = agent.get_job_by_name('job_3')
+        agent.run_job_by_name('job_3')
+
+        print(job.status)
         self.assertIsNone(job.status.get('jfh'))
-        time.sleep(2)
-        print(job.status.get('last_return'))
-        self.assertEqual(job.status.get('jfh'), 'Test')
+
+        time.sleep(0.6)
+        print(job.status)
+        self.assertEqual(job.status['jfh'], 1)
+
+        print(job.status)
+        time.sleep(0.6)
+        self.assertEqual(job.status['jfh'], 2)
+
+        print(job.status)
+        time.sleep(0.7)
+        self.assertEqual(job.status['jfh'], 3)
+        print(job.status)
+        time.sleep(0.7)
+        self.assertEqual(job.status['jfh'], 3)
+
+    def test_job_restart_after_fail_force_run_agent(self):
+        from agent.handler import JobFailHandler
+
+        options = {
+            'scheduler': 'interval',
+            'start_time': datetime.datetime.now(),
+            'interval': 100,
+            'job_fail_handler': {
+                'Handler': 'restart_after_fail',
+                'num_restart_trys_after_fail': 2,
+                'overwrite_agent_not_running': JobFailHandler.OverwriteAgentNotRunning.force_run_agent
+            }
+        }
+        agent = Agent()
+
+        @agent.create_job_decorator(options=options, name='job_3')
+        def test_func_list_int_str_inner_and_job_is_running(job):
+            time.sleep(0.5)
+            if job.status.get('jfh'):
+                job.status['jfh'] = int(job.status['jfh']) + 1
+
+            else:
+                job.status['jfh'] = 1
+            raise Exception('test_exception')
+
+        job = agent.get_job_by_name('job_3')
+        agent.run_job_by_name('job_3')
+
+        print(job.status)
+        self.assertIsNone(job.status.get('jfh'))
+
+        time.sleep(0.6)
+        print(job.status)
+        self.assertEqual(job.status['jfh'], 1)
+
+        print(job.status)
+        time.sleep(0.6)
+        self.assertEqual(job.status['jfh'], 2)
+
+        print(job.status)
+        time.sleep(0.9)
+        self.assertEqual(job.status['jfh'], 3)
+        print(job.status)
+        time.sleep(0.7)
+        self.assertEqual(job.status['jfh'], 3)
 
     def test_job_stop(self):
 
         agent = Agent()
 
-        @agent.create_job_decorator(options=self.options, name='job_1')
+        @agent.create_job_decorator(options=self.options, name='job_2')
         def test_func_list_int_str_inner_and_job_is_running():
             time.sleep(100)
             return 10
 
-        job = agent.get_job_by_name('job_1')
+        job = agent.get_job_by_name('job_2')
         time.sleep(0.5)
         job.start()
         time.sleep(0.5)
@@ -197,4 +280,5 @@ class TestAgent(TestCase):
         time.sleep(2.5)
         print(job.status)
         self.assertIsNone(job.status.get('last_return'))
-# TestAgent.test_job_fail_handler(TestAgent)
+
+# TestAgent.test_job_restart_after_fail(TestAgent)

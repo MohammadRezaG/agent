@@ -15,7 +15,7 @@
 # ------------------------------------------------------------------------------
 # Name: handler.py
 # Description: contain necessary Handler for job
-# Version: 0.1.0
+# Version: 0.1.2
 # Author: Mohammad Reza Golsorkhi
 # ------------------------------------------------------------------------------
 
@@ -25,6 +25,8 @@ import logging
 from inspect import signature
 
 from agent.exceptions import InvalidOption
+from agent.interrupt import RunJobNow
+from enum import Enum
 
 
 class _BaseHandler:
@@ -116,6 +118,10 @@ class Cnrt(_BaseHandler):
 
 
 class JobFailHandler(_BaseHandler):
+    class OverwriteAgentNotRunning(Enum):
+        force_restart_job = 0
+        force_run_agent = 1
+
     def __init__(self, job, options):
         super().__init__(job, options)
         self.fail_counter = 0
@@ -126,8 +132,8 @@ class JobFailHandler(_BaseHandler):
 
         if self.job_fail_handler_options.get('Handler') == 'basics':
             self.func = self._basics
-        elif self.job_fail_handler_options.get('Handler') == 'rerun':
-            self.func = self._rerun
+        elif self.job_fail_handler_options.get('Handler') == 'restart_after_fail':
+            self.func = self._restart_after_fail
         elif self.job_fail_handler_options.get('Handler') == 'custom':
             self.func = self._custom
         else:
@@ -137,11 +143,34 @@ class JobFailHandler(_BaseHandler):
         self.func(kwargs.get('exception', Exception('unknown Error')))
 
     def _basics(self, exception: Exception):
-        logging.log(level=logging.CRITICAL, msg=f'job: {self.job.name} Failed to Execute du \n {exception}',
-                    exc_info=True)
-
-    def _rerun(self, exception: Exception):
         pass
+
+    def _restart_after_fail(self, exception: Exception):
+        if self.job.fail_count <= int(self.job_fail_handler_options.get('num_restart_trys_after_fail')):
+            logging.log(level=logging.INFO,
+                        msg='restart job {} after {} fail {} remaining'.format(self.job.name, self.job.fail_count, (
+                                int(self.job_fail_handler_options.get(
+                                    'num_restart_trys_after_fail')) - self.job.fail_count))
+                        )
+            if self.job.agent.is_running.is_set():
+                self.job.agent.interrupt = RunJobNow(self.job.agent, self.job)
+                self.job.agent.interrupt.set()
+            elif self.job_fail_handler_options.get(
+                    'overwrite_agent_not_running') == self.OverwriteAgentNotRunning.force_restart_job:
+                self.job.is_not_running.set()
+                self.job.start()
+            elif self.job_fail_handler_options.get(
+                    'overwrite_agent_not_running') == self.OverwriteAgentNotRunning.force_run_agent:
+                self.job.agent.interrupt = RunJobNow(self.job.agent, self.job)
+                self.job.agent.interrupt.set()
+                self.job.agent.start()
+            else:
+                logging.log(level=logging.WARNING,
+                            msg=f'failed to restart job {self.job.name} du agent {self.job.agent.name} not running')
+
+        else:
+            logging.log(level=logging.INFO,
+                        msg='job {} failed more than {} times'.format(self.job.name, self.job.fail_count))
 
     def _custom(self, exception: Exception):
 
@@ -153,5 +182,40 @@ class JobFailHandler(_BaseHandler):
             else:
                 raise InvalidOption(
                     'must add custom_job_fail_Handler whit your time job_fail function ')
+
+        self._custom_func(*self._custom_func_args, **self._custom_func_kwargs)
+
+
+class JobSuccessHandler(_BaseHandler):
+    def __init__(self, job, options):
+        super().__init__(job, options)
+        if options.get('job_success_handler'):
+            self.job_fail_handler_options = options.get('job_success_handler')
+        else:
+            self.job_fail_handler_options = {'Handler': 'basics'}
+
+        if self.job_fail_handler_options.get('Handler') == 'basics':
+            self.func = self._basics
+        elif self.job_fail_handler_options.get('Handler') == 'custom':
+            self.func = self._custom
+        else:
+            raise InvalidOption()
+
+    def __call__(self, *args, **kwargs):
+        self.func()
+
+    def _basics(self):
+        pass
+
+    def _custom(self):
+
+        if not hasattr(self, '_custom_func'):
+            if self.job_fail_handler_options.get('job_success_handler'):
+                self._custom_func = self.job_fail_handler_options['job_success_handler']
+                self._custom_func_args, self._custom_func_kwargs = self._custom_func_get_args_and_kwargs(
+                    self._custom_func, {'job': self.job})
+            else:
+                raise InvalidOption(
+                    'must add job_success_handler whit your time job_success function ')
 
         self._custom_func(*self._custom_func_args, **self._custom_func_kwargs)

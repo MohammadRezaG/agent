@@ -15,7 +15,7 @@
 # ------------------------------------------------------------------------------
 # Name: test.py
 # Description: test the functionality of agent and job and other part of package
-# Version: 0.1.1
+# Version: 0.1.2
 # Author: Mohammad Reza Golsorkhi
 # ------------------------------------------------------------------------------
 
@@ -78,7 +78,7 @@ class TestAgent(TestCase):
         agent = Agent()
         t = [1]
         print('job_id IS ' + str(id(t)))
-        agent.create_job(func=test_func, options=TestAgent.options, args=(t,))
+        agent.create_job(func=test_func, options=TestAgent.options, args=(t,), name='job_1')
         agent.start()
         print(t)
         time.sleep(1)
@@ -89,7 +89,7 @@ class TestAgent(TestCase):
         agent = Agent()
         t = [0, '0']
         agent.create_job(func=test_func_list_int_str,
-                         options=TestAgent.options, args=(t,))
+                         options=TestAgent.options, args=(t,), name='job_2')
         agent.start()
         time.sleep(0.1)
         self.assertEqual([1, '1'], t)
@@ -126,7 +126,7 @@ class TestAgent(TestCase):
         agent = Agent()
         t = [0, '0']
         agent.create_job(func=test_func_list_int_str,
-                         options=_options, args=(t,))
+                         options=_options, args=(t,), name='job_3')
         agent.start()
         time.sleep(0.5)
         self.assertEqual([1, '1'], t)
@@ -143,17 +143,18 @@ class TestAgent(TestCase):
     def test_job_return(self):
         agent = Agent()
 
-        @agent.create_job_decorator(options=TestAgent.options, name='job_1')
+        @agent.create_job_decorator(options=TestAgent.options, name='job_4')
         def test_func_list_int_str_inner_and_job_is_running():
             time.sleep(1)
             return 5
 
         agent.start()
-        job = agent.get_job_by_name('job_1')
+        job = agent.get_job_by_name('job_4')
         self.assertIsNone(job.status.get('last_return'))
         time.sleep(2)
         print(job.status.get('last_return'))
         self.assertEqual(job.status.get('last_return'), 5)
+        agent.stop()
 
     def test_job_fail_handler(self):
         def jfh(exception, job):
@@ -171,6 +172,19 @@ class TestAgent(TestCase):
         }
         agent = Agent()
 
+        @agent.create_job_decorator(options=options, name='job_5')
+        def test_func_list_int_str_inner_and_job_is_running():
+            time.sleep(1)
+            raise Exception('test_exception')
+
+        agent.start()
+        job = agent.get_job_by_name('job_5')
+        self.assertIsNone(job.status.get('jfh'))
+        time.sleep(2)
+        print(job.status.get('last_return'))
+        self.assertEqual(job.status.get('jfh'), 'Test')
+        agent.stop()
+
     def test_job_restart_after_fail_force_restart_job(self):
         from agent.handler import JobFailHandler
 
@@ -186,7 +200,7 @@ class TestAgent(TestCase):
         }
         agent = Agent()
 
-        @agent.create_job_decorator(options=options, name='job_3')
+        @agent.create_job_decorator(options=options, name='job_6')
         def test_func_list_int_str_inner_and_job_is_running(job):
             time.sleep(0.5)
             if job.status.get('jfh'):
@@ -196,8 +210,8 @@ class TestAgent(TestCase):
                 job.status['jfh'] = 1
             raise Exception('test_exception')
 
-        job = agent.get_job_by_name('job_3')
-        agent.run_job_by_name('job_3')
+        job = agent.get_job_by_name('job_6')
+        agent.run_job_by_name('job_6')
 
         print(job.status)
         self.assertIsNone(job.status.get('jfh'))
@@ -232,7 +246,7 @@ class TestAgent(TestCase):
         }
         agent = Agent()
 
-        @agent.create_job_decorator(options=options, name='job_3')
+        @agent.create_job_decorator(options=options, name='job_7')
         def test_func_list_int_str_inner_and_job_is_running(job):
             time.sleep(0.5)
             if job.status.get('jfh'):
@@ -242,8 +256,8 @@ class TestAgent(TestCase):
                 job.status['jfh'] = 1
             raise Exception('test_exception')
 
-        job = agent.get_job_by_name('job_3')
-        agent.run_job_by_name('job_3')
+        job = agent.get_job_by_name('job_7')
+        agent.run_job_by_name('job_7')
 
         print(job.status)
         self.assertIsNone(job.status.get('jfh'))
@@ -262,21 +276,22 @@ class TestAgent(TestCase):
         print(job.status)
         time.sleep(0.7)
         self.assertEqual(job.status['jfh'], 3)
+        agent.stop()
 
     def test_job_stop(self):
 
         agent = Agent()
 
-        @agent.create_job_decorator(options=self.options, name='job_2')
+        @agent.create_job_decorator(options=self.options, name='job_8')
         def test_func_list_int_str_inner_and_job_is_running():
-            time.sleep(100)
+            time.sleep(10)
             return 10
 
-        job = agent.get_job_by_name('job_2')
+        job = agent.get_job_by_name('job_8')
         time.sleep(0.5)
         job.start()
         time.sleep(0.5)
-        job.stop(2)
+        job.stop(1)
         time.sleep(2.5)
         print(job.status)
         self.assertIsNone(job.status.get('last_return'))

@@ -15,7 +15,7 @@
 # ------------------------------------------------------------------------------
 # Name: job.py
 # Description: run its inner function when started
-# Version: 0.1.
+# Version: 0.1.2
 # Author: Mohammad Reza Golsorkhi
 # ------------------------------------------------------------------------------
 
@@ -30,6 +30,7 @@ from agent.handler import Cnrt, JobFailHandler, JobSuccessHandler
 from agent.exceptions import JobNotRunning
 import logging
 
+logger = logging.getLogger(__name__)
 
 class LastRuntimeState(Enum):
     never_executed = 0
@@ -48,7 +49,7 @@ class Job:
 
     def __init__(self, agent, job_id, name, func, options, is_enable, args, kwargs):
 
-        logging.log(level=logging.INFO, msg=f'initializing job {name}')
+        logger.info(msg=f'initializing job {name}')
         self._id = job_id
         self._name = name
         self._agent = agent
@@ -82,26 +83,26 @@ class Job:
 
         self._initialized = True
 
-        logging.log(level=logging.INFO, msg=f'job {name} has initialized')
+        logger.info(msg=f'job {name} has initialized')
 
     def _job_run(self):
         try:
             self._is_not_running.clear()
-            logging.log(level=logging.INFO, msg=f'starting job {self._name}')
+            logger.info(msg=f'starting job {self._name}')
             self._calculate_next_run_time()
-            logging.log(level=logging.INFO, msg=f'executing job {self._name} function')
+            logger.info(msg=f'executing job {self._name} function')
             self.status['last_return'] = self._func(*self._args, **self._kwargs)
         except Exception as E:
             print(E)
             self._fail_count += 1
             self.status['LastRunState'] = LastRuntimeState.failed
-            logging.log(level=logging.ERROR, msg=f'job: {self.name} Failed to Execute du\n', exc_info=True)
+            logger.error(msg=f'job: {self.name} Failed to Execute du\n', exc_info=True)
             self._job_fail_handler(exception=E)
             return 0
         else:
             self._fail_count = 0
             self._job_success_handler()
-            logging.log(level=logging.INFO, msg=f'job {self.name} execute successfully')
+            logger.info(msg=f'job {self.name} execute successfully')
             self.status['LastRunState'] = LastRuntimeState.success
         finally:
             self.status['LastRuntime'] = datetime.datetime.now()
@@ -120,13 +121,14 @@ class Job:
         :param silence_error: None for raise JobNotRunning() or return silence_error if not none
         :return: 1 if successful None if not
         """
-        if not self._is_not_running.is_set():
-            self.job_thread.join(timeout=timeout)
-            return 1
-        else:
+        if self._is_not_running.is_set():
             if silence_error:
                 return None
             raise JobNotRunning()
+        else:
+            self.job_thread.join(timeout=timeout)
+            self._is_not_running.set()
+            return 1
 
     def start(self, timeout=None):
         """
@@ -135,7 +137,7 @@ class Job:
         :return: 1 if successful
         """
         if not self.is_not_running.is_set():
-            logging.log(level=logging.WARNING, msg=f'job {self.name} is running whiting for job to done')
+            logger.warning(msg=f'job {self.name} is running whiting for job to done')
             if not self.is_not_running.wait(timeout=timeout):
                 logging.log(level=logging.WARNING, msg=f'timeout occurred on job{self.name}')
 

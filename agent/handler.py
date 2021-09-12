@@ -15,7 +15,7 @@
 # ------------------------------------------------------------------------------
 # Name: handler.py
 # Description: contain necessary Handler for job
-# Version: 0.1.2
+# Version: 0.1.3
 # Author: Mohammad Reza Golsorkhi
 # ------------------------------------------------------------------------------
 
@@ -95,7 +95,7 @@ class Cnrt(_BaseHandler):
             else:
                 return self.job.next_run_time + datetime.timedelta(seconds=self.options['interval'])
         else:
-            raise InvalidOption('interval not fond')
+            raise InvalidOption('interval not fond or interval = 0')
 
     def _custom(self):
 

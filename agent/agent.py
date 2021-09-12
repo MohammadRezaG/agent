@@ -26,7 +26,8 @@ from time import sleep
 
 import agent.exceptions as exceptions
 import agent.interrupt as interrupt
-from agent.job import Job
+from agent.job import FunctionJob
+import dill
 import logging
 
 logger = logging.getLogger(__name__)
@@ -77,6 +78,42 @@ class Agent:
         logger.info(msg=f'agent {self.name} stopped')
         return 0
 
+    def append_job(self, job):
+        """
+        load a job and add to jobs list
+        :param job: a instance of job
+        :return: None
+        """
+        self.jobs.append(job)
+
+    def load_job(self):
+        """
+        place holder
+        :return:
+        """
+        pass
+
+    def loads_job(self):
+        """
+        place holder
+        :return:
+        """
+        pass
+
+    def dump_job(self):
+        """
+        place holder
+        :return:
+        """
+        pass
+
+    def dumps_job(self):
+        """
+        place holder
+        :return:
+        """
+        pass
+
     def _add_job(self, func, options, is_enable, args, kwargs, name):
         self._jobs_id_counter += 1
         job_id = self._jobs_id_counter
@@ -85,7 +122,7 @@ class Agent:
         if self.get_job_by_name(name) is not None:
             raise exceptions.DuplicateName('job name must be unique')
 
-        self.jobs.append(Job(self, job_id, name, func, options, is_enable, args, kwargs))
+        self.jobs.append(FunctionJob(self, job_id, name, func, options, is_enable, args, kwargs))
 
     def create_job(self, func, options: dict, args=(), kwargs=None, is_enable: bool = True, name: str = None):
         self._add_job(func, options, is_enable, args, kwargs, name)
@@ -112,7 +149,7 @@ class Agent:
             return None
 
     @staticmethod
-    def run_job(job: Job, timeout=None):
+    def run_job(job: FunctionJob, timeout=None):
         if job:
             job.start(timeout)
             return 1
@@ -166,13 +203,13 @@ class Agent:
         self._started.clear()
         logger.info(msg=f'agent {self.name} stopped')
 
-    def __del__(self):
-        if not self._is_stop.is_set():
-            self.stop()
-        for job in self.jobs:
-            if not job.is_not_running.is_set():
-                job.stop(timeout=0, silence_error=0)
-        self.jobs.clear()
+    # def __del__(self):
+    #     if not self._is_stop.is_set():
+    #         self.stop()
+    #     for job in self.jobs:
+    #         if not job.is_not_running.is_set():
+    #             job.stop(timeout=0, silence_error=0)
+    #     self.jobs.clear()
 
     @property
     def interrupt(self):

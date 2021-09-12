@@ -30,7 +30,7 @@ class InvalidOption(Exception):
 
 class JobNotRunning(Exception):
     """
-    Job Not Running
+    FunctionJob Not Running
     """
     pass
 

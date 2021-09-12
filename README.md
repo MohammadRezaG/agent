@@ -7,7 +7,7 @@ Inspired by this project https://github.com/sankalpjonn/timeloop
 
 ## Installation
 ```
-pip install agent-Job-scheduler
+pip install agent-FunctinoJob-scheduler
 ```
 
 ## creating options

@@ -42,10 +42,10 @@ in **`custom_time_scheduler`** we add the name of or function in this case **`cu
 #### note : do not use `()` in Front of function name
 after that we must add **start_time** and **args**
 
-# Create custom Job Fail Handler
+# Create custom FunctinoJob Fail Handler
 this handler calls after job has failed or raise an error
 
-in this example we crate a custom Job Fail Handler
+in this example we crate a custom FunctinoJob Fail Handler
 
 ```python
 

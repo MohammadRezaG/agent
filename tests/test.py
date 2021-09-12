@@ -24,7 +24,7 @@ import datetime
 import time
 from unittest import TestCase
 
-from ..agent import Agent
+from agent.agent import Agent
 
 
 def test_func(t):
@@ -73,6 +73,7 @@ class TestAgent(TestCase):
         self.assertEqual(0, agent.run_job_by_name('asx'))
         self.assertEqual(2, len(agent.get_all_jobs()))
         self.assertIsNone(agent.get_job_by_id(4))
+        del agent
 
     def test_agent(self):
         agent = Agent()

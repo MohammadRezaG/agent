@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ------------------------------------------------------------------------------
-# Name: test.py
+# name: test.py
 # Description: test the functionality of agent and job and other part of package
 # Version: 0.1.2
 # Author: Mohammad Reza Golsorkhi
@@ -297,4 +297,27 @@ class TestAgent(TestCase):
         print(job.status)
         self.assertIsNone(job.status.get('last_return'))
 
+    def test_job_variables(self):
+        import copy
+        agent = Agent()
+
+        @agent.create_job_decorator(options=self.options, name='job_9')
+        def test_func_list_int_str_inner_and_job_is_running(job):
+            print(job.test_var)
+            job.test_var += 1
+            return job.test_var
+
+        @agent.create_job_decorator(options=self.options, name='job_10')
+        def test_func_list_int_str_inner_and_job_is_running(job):
+            print(job.test_var)
+            job.test_var += 1
+            return job.test_var
+
+        job9 = agent.get_job_by_name('job_9')
+        agent.run_job_by_name('job_9')
+        time.sleep(0.1)
+        self.assertEqual(job9.status.get('last_return'), 1)
+        agent.run_job_by_name('job_10')
+        time.sleep(2)
+        self.assertEqual(job9.status.get('last_return'), 2)
 # TestAgent.test_job_restart_after_fail(TestAgent)

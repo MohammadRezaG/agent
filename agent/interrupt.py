@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ------------------------------------------------------------------------------
-# Name: interrupt.py
+# name: interrupt.py
 # Description: contain necessary Handler for job and agent
 # Version: 0.1.1
 # Author: Mohammad Reza Golsorkhi

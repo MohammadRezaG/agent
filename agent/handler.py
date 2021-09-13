@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ------------------------------------------------------------------------------
-# Name: handler.py
+# name: handler.py
 # Description: contain necessary Handler for job
 # Version: 0.1.3
 # Author: Mohammad Reza Golsorkhi

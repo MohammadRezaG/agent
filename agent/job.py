@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ------------------------------------------------------------------------------
-# Name: job.py
+# name: job.py
 # Description: run its inner function when started
 # Version: 0.1.2
 # Author: Mohammad Reza Golsorkhi
@@ -33,7 +33,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class LastRuntimeState(Enum):
+class LastRuntimeState(str, Enum):
     never_executed = 0
     success = 1
     failed = 2
@@ -46,15 +46,16 @@ class Job:
         return str(self.status)
 
     def __str__(self):
-        return f'Name : {self.name} job_id : {self.id} agent : {self._agent}'
+        return f'name : {self.name} job_id : {self.id} agent : {self._agent}'
 
-    def __init__(self, agent, job_id, name, options, is_enable):
+    def __init__(self, agent, job_id, name, options, is_enable, **variables):
         logger.info(msg=f'initializing job {name}')
         self._id = job_id
         self._name = name
         self._agent = agent
         self._fail_count = 0
         self.status = {}
+        self.__dict__.update(variables)
         self.update_status()
         self.options = options
         self.next_run_time = None
@@ -180,8 +181,8 @@ class Job:
 
 class FunctionJob(Job):
 
-    def __init__(self, agent, job_id, name, func, options, is_enable, args, kwargs):
-        super().__init__(agent, job_id, name, options, is_enable)
+    def __init__(self, agent, job_id, name, func, options, is_enable, args, kwargs,  **job_variables):
+        super().__init__(agent, job_id, name, options, is_enable, **job_variables)
         self._func = func
         self._args = args
 

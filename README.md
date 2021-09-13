@@ -32,7 +32,7 @@ agent = Agent()
 
 @agent.create_job_decorator(options=options, args=('i am massage',), name='dec1')
 def sample_job_every_2s(massage, job):
-    print(f'I am running whit massage {massage} and my Name is {job.name}')
+    print(f'I am running whit massage {massage} and my name is {job.name}')
 
 
 @agent.create_job_decorator(options=options)
@@ -41,7 +41,7 @@ def sample_job_every_5s():
 
 
 def sample_job_every_10s(massage, job):
-    print(f'I am running whit massage {massage} and my Name is {job.name}')
+    print(f'I am running whit massage {massage} and my name is {job.name}')
 agent.create_job(func = sample_job_every_10s, name='job2', options=options, args=('i am massage',))
 
 #run agent whit :

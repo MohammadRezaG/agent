@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ------------------------------------------------------------------------------
-# Name: agent.py
+# name: agent.py
 # Description: A agent that handles jobs and run jobs
 # Version: 0.1.2
 # Author: Mohammad Reza Golsorkhi
@@ -25,10 +25,14 @@ import threading
 from time import sleep
 
 import agent.exceptions as exceptions
-import agent.interrupt as interrupt
+import agent.interrupt as _interrupt
 from agent.job import FunctionJob
-import dill
 import logging
+
+try:
+    import dill as pickle
+except ImportError:
+    import pickle
 
 logger = logging.getLogger(__name__)
 
@@ -39,9 +43,9 @@ class Agent:
     _Agent_counter = 0
 
     def __repr__(self):
-        return f'Name : {self.name} agent_id : {self._id}'
+        return f'name : {self.name} agent_id : {self._id}'
 
-    def __init__(self, daemon=True, name=None):
+    def __init__(self, daemon=True, name=None, **jobs_variables):
         # increment
         Agent._Agent_counter += 1
 
@@ -50,11 +54,13 @@ class Agent:
         self._daemon = daemon
         self._started = threading.Event()
         self._is_stop = threading.Event()
-        self._interrupt = interrupt.NoneInterrupt(self)
+        self._interrupt = _interrupt.NoneInterrupt(self)
         self._jobs_id_counter = 0
-        self._initialized = True
+
         self._name = str(name or Agent._newname())
         self.is_running = threading.Event()
+        self.__dict__.update(jobs_variables)
+        self._initialized = True
 
     @staticmethod
     def _newname():
@@ -114,7 +120,7 @@ class Agent:
         """
         pass
 
-    def _add_job(self, func, options, is_enable, args, kwargs, name):
+    def _add_job(self, func, options, is_enable, args, kwargs, name, **job_variables):
         self._jobs_id_counter += 1
         job_id = self._jobs_id_counter
         if name is None:
@@ -122,14 +128,16 @@ class Agent:
         if self.get_job_by_name(name) is not None:
             raise exceptions.DuplicateName('job name must be unique')
 
-        self.jobs.append(FunctionJob(self, job_id, name, func, options, is_enable, args, kwargs))
+        self.jobs.append(FunctionJob(self, job_id, name, func, options, is_enable, args, kwargs, **job_variables))
 
-    def create_job(self, func, options: dict, args=(), kwargs=None, is_enable: bool = True, name: str = None):
-        self._add_job(func, options, is_enable, args, kwargs, name)
+    def create_job(self, func, options: dict, args=(), kwargs=None, is_enable: bool = True, name: str = None,
+                   **job_variables):
+        self._add_job(func, options, is_enable, args, kwargs, name, **job_variables)
 
-    def create_job_decorator(self, options: dict, args=(), kwargs=None, is_enable: bool = True, name: str = None):
+    def create_job_decorator(self, options: dict, args=(), kwargs=None, is_enable: bool = True, name: str = None,
+                             **job_variables):
         def decorator(func):
-            self._add_job(func, options, is_enable, args, kwargs, name)
+            self._add_job(func, options, is_enable, args, kwargs, name, **job_variables)
             return func
 
         return decorator
@@ -179,6 +187,10 @@ class Agent:
         return [job for job in self.jobs if job.is_running.is_set()]
 
     def start(self):
+        """
+        start agent inner thread
+        :return: None
+        """
         if not self._initialized:
             raise RuntimeError("Agent.__init__() not called")
 
@@ -191,6 +203,10 @@ class Agent:
         self._started.set()
 
     def stop(self):
+        """
+        set a stop interrupt that wait for all running job stop
+        :return: None
+        """
         if not self._initialized:
             raise RuntimeError("Agent.__init__() not called")
         if not self._started.is_set():
@@ -203,22 +219,24 @@ class Agent:
         self._started.clear()
         logger.info(msg=f'agent {self.name} stopped')
 
-    # def __del__(self):
-    #     if not self._is_stop.is_set():
-    #         self.stop()
-    #     for job in self.jobs:
-    #         if not job.is_not_running.is_set():
-    #             job.stop(timeout=0, silence_error=0)
-    #     self.jobs.clear()
-
     @property
     def interrupt(self):
+        """
+        you can active a interrupt whit .set() methode
+        :return:
+        """
         if not self._initialized:
             raise RuntimeError("Agent.__init__() not called")
         return self._interrupt
 
     @interrupt.setter
-    def interrupt(self, val):
+    def interrupt(self, val: _interrupt.BaseInterrupt):
+        """
+        set a interrupt that can be activate whit interrupt.set() methode
+        :param val: get a class that inherited BaseInterrupt
+        you can find it in agent.interrupt
+        :return:
+        """
         if self._interrupt is not None:
             if self._interrupt.lock.locked():
                 logger.error(msg='interrupt is set waiting for interrupt clear')
@@ -245,3 +263,15 @@ class Agent:
             raise PermissionError('cannot set name of active Agent')
         else:
             self._name = val
+
+    @property
+    def info(self):
+        """
+        get info about agent
+        :return: dict of info
+        """
+        return {
+            'version': '0.1.2',
+            'is_dill_sported': getattr(pickle, 'info')
+
+        }

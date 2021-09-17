@@ -15,7 +15,7 @@
 # ------------------------------------------------------------------------------
 # name: agent.py
 # Description: A agent that handles jobs and run jobs
-# Version: 0.1.2
+# Version: 0.1.3
 # Author: Mohammad Reza Golsorkhi
 # ------------------------------------------------------------------------------
 
@@ -26,8 +26,9 @@ from time import sleep
 
 import agent.exceptions as exceptions
 import agent.interrupt as _interrupt
-from agent.job import FunctionJob
+from agent.job import FunctionJob, Job
 import logging
+from pathlib import Path
 
 try:
     import dill as pickle
@@ -41,25 +42,25 @@ class Agent:
     _name: str
     _initialized = False
     _Agent_counter = 0
+    _job_id_counter = 0
 
     def __repr__(self):
         return f'name : {self.name} agent_id : {self._id}'
 
-    def __init__(self, daemon=True, name=None, **jobs_variables):
+    def __init__(self, daemon=True, id=None, name=None, **kwargs):
         # increment
         Agent._Agent_counter += 1
 
-        self._id = Agent._Agent_counter
+        self._id = Agent._Agent_counter if id is None else id
         self.jobs = []
         self._daemon = daemon
         self._started = threading.Event()
         self._is_stop = threading.Event()
         self._interrupt = _interrupt.NoneInterrupt(self)
-        self._jobs_id_counter = 0
 
         self._name = str(name or Agent._newname())
         self.is_running = threading.Event()
-        self.__dict__.update(jobs_variables)
+        self.__dict__.update(kwargs)
         self._initialized = True
 
     @staticmethod
@@ -84,45 +85,95 @@ class Agent:
         logger.info(msg=f'agent {self.name} stopped')
         return 0
 
-    def append_job(self, job):
+    @staticmethod
+    def _get_new_job_id():
+        Agent._job_id_counter += 1
+        return Agent._job_id_counter
+
+    def append_job(self, job: Job, name=None):
         """
         load a job and add to jobs list
         :param job: a instance of job
+        :param name: name default is job.name
         :return: None
         """
+        if name:
+            job.name = name
+        if self.get_job_by_name(job.name):
+            while True:
+                counter = 1
+                if self.get_job_by_name(str(job.name + f' ({counter})')) is None:
+                    job.name = str(job.name + f' ({counter})')
+                    break
+        job._id = self._get_new_job_id()
+        job.agent = self
         self.jobs.append(job)
 
-    def load_job(self):
+    def load_job(self, filepath, name=None, **kwargs):
         """
-        place holder
+        load a job file and add to agent
+        :param filepath: path to job file
+        :param name: name default is job.name
+        :param kwargs:
         :return:
         """
-        pass
+        filepath = Path(filepath)
+        if filepath.exists() and filepath.is_file():
+            with open(filepath, 'rb') as file:
+                job = pickle.load(file, **kwargs)
+                if isinstance(job, Job):
+                    self.append_job(job=job, name=name)
+                else:
+                    raise TypeError(f'object in {filepath} file is not a instance of Job')
 
-    def loads_job(self):
+    def loads_job(self, str, name=None, **kwargs):
         """
-        place holder
-        :return:
-        """
-        pass
 
-    def dump_job(self):
-        """
-        place holder
+        :param str:
+        :param name: name default is job.name
+        :param kwargs:
         :return:
         """
-        pass
+        job = pickle.loads(str, **kwargs)
+        if not isinstance(job, Job):
+            raise TypeError(f'object in {type(job)} is not a instance of Job')
+        self.append_job(job=job, name=name)
 
-    def dumps_job(self):
+    @staticmethod
+    def save_job(job: Job, dirpath, file_name=None, protocol=None, **kwargs):
         """
-        place holder
+        save job in to a file
+        :param job: get a job you can us get_job_by_name or get_job_by_id
+        :param dirpath: path to dir you want job be save
+        :param file_name: name of file default is job.name
+        :param protocol: pickle protocol
+        :param kwargs:
         :return:
         """
-        pass
+
+        dirpath = Path(dirpath)
+        data_file_path = dirpath.joinpath(str((job.name if file_name is None else file_name) + '.job'))
+
+        if not dirpath.exists():
+            dirpath.mkdir(parents=True)
+
+        with open(data_file_path, mode='wb') as file:
+            pickle.dump(obj=job, file=file, protocol=protocol, **kwargs)
+
+    @staticmethod
+    def dumps_job(job, protocol=None, **kwargs):
+        """
+        this methode is like pickle dumps methode
+        :param job: a job you can get it whit get_job_by_name or get_job_by_id
+        :param protocol: pickle protocol
+        :param kwargs: for dill or pickle you can pass more argument but because the difference within dill and pickle
+        I only give **kwargs to dumps function
+        :return:  str
+        """
+        return pickle.dumps(obj=job, protocol=protocol, **kwargs)
 
     def _add_job(self, func, options, is_enable, args, kwargs, name, **job_variables):
-        self._jobs_id_counter += 1
-        job_id = self._jobs_id_counter
+        job_id = Agent._get_new_job_id()
         if name is None:
             name = 'job_' + str(job_id)
         if self.get_job_by_name(name) is not None:
@@ -212,7 +263,7 @@ class Agent:
         if not self._started.is_set():
             raise RuntimeError("cannot stop Agent before it is started")
         logger.info(msg=f'agent {self.name} is stopping')
-        self._interrupt = interrupt.StopInterrupt(self)
+        self._interrupt = _interrupt.StopInterrupt(self)
         self._interrupt.set()
         self._interrupt.wait()
         self._is_stop.set()

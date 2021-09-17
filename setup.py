@@ -8,7 +8,7 @@ def readme():
 
 setup(
     name='agent_Job_scheduler',
-    version='0.2.1.dev5',
+    version='0.2.2.dev1',
     packages=['agent'],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

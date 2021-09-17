@@ -15,7 +15,7 @@
 # ------------------------------------------------------------------------------
 # name: test.py
 # Description: test the functionality of agent and job and other part of package
-# Version: 0.1.2
+# Version: 0.1.3
 # Author: Mohammad Reza Golsorkhi
 # ------------------------------------------------------------------------------
 
@@ -66,13 +66,13 @@ class TestAgent(TestCase):
         time.sleep(2.1)
         self.assertEqual([1, '1'], t)
 
-        agent.run_job_by_id(2)
+        agent.run_job_by_id(agent.get_job_by_name('dec2').id)
         time.sleep(2)
         self.assertEqual([2, '2'], t)
-        self.assertEqual(0, agent.run_job_by_id(3))
+        self.assertEqual(0, agent.run_job_by_id(Agent._job_id_counter + 1))
         self.assertEqual(0, agent.run_job_by_name('asx'))
         self.assertEqual(2, len(agent.get_all_jobs()))
-        self.assertIsNone(agent.get_job_by_id(4))
+        self.assertIsNone(agent.get_job_by_id(Agent._job_id_counter + 1))
         del agent
 
     def test_agent(self):
@@ -297,27 +297,20 @@ class TestAgent(TestCase):
         print(job.status)
         self.assertIsNone(job.status.get('last_return'))
 
-    def test_job_variables(self):
-        import copy
+    def test_save_and_load(self):
         agent = Agent()
+        agent.create_job(func=test_func, name='job_a1', options=self.options)
+        agent.save_job(job=agent.get_job_by_name('job_a1'), dirpath=r'W:\source\repos\agent\tests')
+        agent.load_job(filepath=r'W:\source\repos\agent\tests\job_a1.job')
+        job_a1 = agent.get_job_by_name('job_a1')
+        job_a1_loaded = agent.get_job_by_name('job_a1 (1)')
+        self.assertEqual(job_a1_loaded._func.__code__.co_code, job_a1._func.__code__.co_code)
 
-        @agent.create_job_decorator(options=self.options, name='job_9')
-        def test_func_list_int_str_inner_and_job_is_running(job):
-            print(job.test_var)
-            job.test_var += 1
-            return job.test_var
-
-        @agent.create_job_decorator(options=self.options, name='job_10')
-        def test_func_list_int_str_inner_and_job_is_running(job):
-            print(job.test_var)
-            job.test_var += 1
-            return job.test_var
-
-        job9 = agent.get_job_by_name('job_9')
-        agent.run_job_by_name('job_9')
-        time.sleep(0.1)
-        self.assertEqual(job9.status.get('last_return'), 1)
-        agent.run_job_by_name('job_10')
-        time.sleep(2)
-        self.assertEqual(job9.status.get('last_return'), 2)
-# TestAgent.test_job_restart_after_fail(TestAgent)
+    def test_dumps_and_loads(self):
+        agent = Agent()
+        agent.create_job(func=test_func, name='job_a1', options=self.options)
+        s = agent.dumps_job(job=agent.get_job_by_name('job_a1'))
+        agent.loads_job(str=s)
+        job_a1 = agent.get_job_by_name('job_a1')
+        job_a1_loaded = agent.get_job_by_name('job_a1 (1)')
+        self.assertEqual(job_a1_loaded._func.__code__.co_code, job_a1._func.__code__.co_code)

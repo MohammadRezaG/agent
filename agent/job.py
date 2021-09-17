@@ -15,7 +15,7 @@
 # ------------------------------------------------------------------------------
 # name: job.py
 # Description: run its inner function when started
-# Version: 0.1.2
+# Version: 0.1.3
 # Author: Mohammad Reza Golsorkhi
 # ------------------------------------------------------------------------------
 
@@ -138,7 +138,10 @@ class Job:
         if not self._is_not_running.is_set():
             raise PermissionError('cannot assign active job to another agent')
         else:
-            self._agent = val
+            if val.get_job_by_name(self.name) is None:
+                self._agent = val
+            else:
+                raise NameError('name in agent must be unique {} already exist'.format(self.name))
 
     @property
     def fail_count(self):
@@ -167,7 +170,10 @@ class Job:
         if not self._is_not_running.is_set():
             raise PermissionError('cannot set name of active job')
         else:
-            self._name = val
+            if self.agent.get_job_by_name(val) is None:
+                self._name = val
+            else:
+                raise NameError('name in agent must be unique {} already exist'.format(val))
 
     @property
     def id(self):
@@ -181,7 +187,7 @@ class Job:
 
 class FunctionJob(Job):
 
-    def __init__(self, agent, job_id, name, func, options, is_enable, args, kwargs,  **job_variables):
+    def __init__(self, agent, job_id, name, func, options, is_enable, args, kwargs, **job_variables):
         super().__init__(agent, job_id, name, options, is_enable, **job_variables)
         self._func = func
         self._args = args

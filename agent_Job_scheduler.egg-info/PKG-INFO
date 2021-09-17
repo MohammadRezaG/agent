@@ -1,0 +1,41 @@
+Metadata-Version: 2.1
+Name: agent-Job-scheduler
+Version: 0.2.1.dev5
+Summary: agent is a python job scheduler
+Home-page: UNKNOWN
+Author: Mohammad Reza Golsorkhi
+Author-email: Mgol2077@outlook.com
+License: Apache License 2.0
+Project-URL: Documentation, https://github.com/MohammadRezaG/agent/wiki
+Project-URL: Source, https://github.com/MohammadRezaG/agent
+Project-URL: Tracker, https://github.com/MohammadRezaG/agent/issues
+Keywords: tasks jobs periodic task interval periodic_job periodicjob flask style decorator agent job scheduler time agent_Job agent_Job_scheduler
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python :: 3.9
+Requires-Python: >=3.8
+License-File: LICENSE
+License-File: NOTICE
+
+Funniest
+--------
+
+quick start ::
+
+    >>> import agent
+    >>> a = agent.Agent()
+    >>> import  datetime
+    >>> options = {
+    ... 'scheduler': 'interval',
+    ... 'start_time': datetime.datetime.now(),
+    ... 'interval': 1
+    ... }
+    >>> @agent.create_job_decorator(options=options)
+    >>> def sample_job_every_5s():
+    ...     print('I am running whiteout massage and name')
+    >>>
+    >>> a.start()
+
+
+

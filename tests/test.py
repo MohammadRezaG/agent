@@ -83,7 +83,7 @@ class TestAgent(TestCase):
         agent.start()
         print(t)
         time.sleep(1)
-        # self.assertIn('in test func 1', t)
+        self.assertIn('in test func 1', t)
         agent.stop()
 
     def test_agent_stop(self):
@@ -122,7 +122,7 @@ class TestAgent(TestCase):
             'scheduler': 'custom',
             'start_time': datetime.datetime.now(),
             'custom_time_scheduler': self.custom_interval,
-            'args': (1,)
+            'scheduler_args': (1,)
         }
         agent = Agent()
         t = [0, '0']

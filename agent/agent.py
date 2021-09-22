@@ -32,8 +32,10 @@ from pathlib import Path
 
 try:
     import dill as pickle
+
+    is_dill_available = True
 except ImportError:
-    import pickle
+    is_dill_available = False
 
 logger = logging.getLogger(__name__)
 
@@ -150,6 +152,8 @@ class Agent:
         :param kwargs:
         :return:
         """
+        if not is_dill_available :
+            pass
 
         dirpath = Path(dirpath)
         data_file_path = dirpath.joinpath(str((job.name if file_name is None else file_name) + '.job'))

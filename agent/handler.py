@@ -47,7 +47,7 @@ class _BaseHandler:
     def __call__(self, *args, **kwargs):
         return self.func()
 
-    def _custom_func_get_args_and_kwargs(self, func, pass_args: dict):
+    def _custom_func_get_args_and_kwargs(self, func, pass_args: dict, custom_func_args=(), custom_func_kwargs={}):
         """
         this function return a tuple of args And kwargs
         use this function is not recommended for use outside of handler
@@ -57,8 +57,8 @@ class _BaseHandler:
         :return: (args, kwargs)
         """
         func_sig = signature(func)
-        custom_func_args = self.options.get('args', ())
-        custom_func_kwargs = self.options.get('kwargs', {})
+        custom_func_args = custom_func_args
+        custom_func_kwargs = custom_func_kwargs
         for args_name in pass_args:
             if (len(custom_func_args) + len(custom_func_kwargs) < len(
                     func_sig.parameters)) and func_sig.parameters.get(args_name) is not None:
@@ -101,9 +101,11 @@ class Cnrt(_BaseHandler):
 
         if not hasattr(self, '_custom_func'):
             if self.options.get('custom_time_scheduler'):
+                custom_func_args = self.options.get('scheduler_args', ())
+                custom_func_kwargs = self.options.get('kwargs', {})
                 self._custom_func = self.options['custom_time_scheduler']
                 self._custom_func_args, self._custom_func_kwargs = self._custom_func_get_args_and_kwargs(
-                    self._custom_func, {'job': self.job})
+                    self._custom_func, {'job': self.job}, custom_func_args, custom_func_kwargs)
             else:
                 raise InvalidOption(
                     'must add custom_time_scheduler whit your time scheduler function that return datetime object')

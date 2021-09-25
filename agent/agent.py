@@ -327,6 +327,6 @@ class Agent:
         """
         return {
             'version': '0.1.2',
-            'is_dill_sported': getattr(pickle, 'info')
+            'is_dill_sported': is_dill_available
 
         }

@@ -8,10 +8,10 @@ def readme():
 
 setup(
     name='agent_Job_scheduler',
-    version='0.2.2.dev3',
+    version='0.2.3',
     packages=['agent'],
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 4 - Beta',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3.9',
     ],

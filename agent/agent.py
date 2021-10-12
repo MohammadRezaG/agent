@@ -31,7 +31,7 @@ import logging
 from pathlib import Path
 
 try:
-    import dill as pickle
+    import dill
 
     is_dill_available = True
 except ImportError:
@@ -39,6 +39,10 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+def handle_error_no_dill ():
+    print(f"""
+    dill in not installed
+    """)
 
 class Agent:
     _name: str
@@ -117,12 +121,16 @@ class Agent:
         :param filepath: path to job file
         :param name: name default is job.name
         :param kwargs:
-        :return:
+        :return: None
         """
+        if not is_dill_available:
+            handle_error_no_dill()
+            return
+
         filepath = Path(filepath)
         if filepath.exists() and filepath.is_file():
             with open(filepath, 'rb') as file:
-                job = pickle.load(file, **kwargs)
+                job = dill.load(file, **kwargs)
                 if isinstance(job, Job):
                     self.append_job(job=job, name=name)
                 else:
@@ -136,7 +144,11 @@ class Agent:
         :param kwargs:
         :return:
         """
-        job = pickle.loads(str, **kwargs)
+        if not is_dill_available:
+            handle_error_no_dill()
+            return
+
+        job = dill.loads(str, **kwargs)
         if not isinstance(job, Job):
             raise TypeError(f'object in {type(job)} is not a instance of Job')
         self.append_job(job=job, name=name)
@@ -148,12 +160,13 @@ class Agent:
         :param job: get a job you can us get_job_by_name or get_job_by_id
         :param dirpath: path to dir you want job be save
         :param file_name: name of file default is job.name
-        :param protocol: pickle protocol
+        :param protocol: dill protocol
         :param kwargs:
         :return:
         """
-        if not is_dill_available :
-            pass
+        if not is_dill_available:
+            handle_error_no_dill()
+            return
 
         dirpath = Path(dirpath)
         data_file_path = dirpath.joinpath(str((job.name if file_name is None else file_name) + '.job'))
@@ -162,19 +175,23 @@ class Agent:
             dirpath.mkdir(parents=True)
 
         with open(data_file_path, mode='wb') as file:
-            pickle.dump(obj=job, file=file, protocol=protocol, **kwargs)
+            dill.dump(obj=job, file=file, protocol=protocol, **kwargs)
 
     @staticmethod
     def dumps_job(job, protocol=None, **kwargs):
         """
-        this methode is like pickle dumps methode
+        this methode is like dill dumps methode
         :param job: a job you can get it whit get_job_by_name or get_job_by_id
-        :param protocol: pickle protocol
-        :param kwargs: for dill or pickle you can pass more argument but because the difference within dill and pickle
+        :param protocol: dill protocol
+        :param kwargs: for dill or dill you can pass more argument but because the difference within dill and dill
         I only give **kwargs to dumps function
         :return:  str
         """
-        return pickle.dumps(obj=job, protocol=protocol, **kwargs)
+        if not is_dill_available:
+            handle_error_no_dill()
+            return
+
+        return dill.dumps(obj=job, protocol=protocol, **kwargs)
 
     def _add_job(self, func, options, is_enable, args, kwargs, name, **job_variables):
         job_id = Agent._get_new_job_id()

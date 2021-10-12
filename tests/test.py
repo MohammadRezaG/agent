@@ -27,7 +27,7 @@ from unittest import TestCase
 from agent.agent import Agent
 
 
-def test_func(t):
+def _test_func(t):
     print('I am running')
     c = t[0]
     t.append('in test func {}'.format(str(c)))
@@ -35,7 +35,7 @@ def test_func(t):
     print(t)
 
 
-def test_func_list_int_str(t):
+def _test_func_list_int_str(t):
     c = t[0] + 1
     t[0] = c
     t[1] = str(c)
@@ -52,7 +52,7 @@ class TestAgent(TestCase):
     def test_run_job_by_id_and_name(self):
         agent = Agent()
         t = [0, '0']
-        agent.create_job(func=test_func_list_int_str,
+        agent.create_job(func=_test_func_list_int_str,
                          options=TestAgent.options, args=(t,), name='norm2')
 
         @agent.create_job_decorator(options=TestAgent.options, args=(t,), name='dec2')
@@ -79,7 +79,7 @@ class TestAgent(TestCase):
         agent = Agent()
         t = [1]
         print('job_id IS ' + str(id(t)))
-        agent.create_job(func=test_func, options=TestAgent.options, args=(t,), name='job_1')
+        agent.create_job(func=_test_func, options=TestAgent.options, args=(t,), name='job_1')
         agent.start()
         print(t)
         time.sleep(1)
@@ -89,7 +89,7 @@ class TestAgent(TestCase):
     def test_agent_stop(self):
         agent = Agent()
         t = [0, '0']
-        agent.create_job(func=test_func_list_int_str,
+        agent.create_job(func=_test_func_list_int_str,
                          options=TestAgent.options, args=(t,), name='job_2')
         agent.start()
         time.sleep(0.1)
@@ -126,7 +126,7 @@ class TestAgent(TestCase):
         }
         agent = Agent()
         t = [0, '0']
-        agent.create_job(func=test_func_list_int_str,
+        agent.create_job(func=_test_func_list_int_str,
                          options=_options, args=(t,), name='job_3')
         agent.start()
         time.sleep(0.5)
@@ -299,16 +299,16 @@ class TestAgent(TestCase):
 
     def test_save_and_load(self):
         agent = Agent()
-        agent.create_job(func=test_func, name='job_a1', options=self.options)
-        agent.save_job(job=agent.get_job_by_name('job_a1'), dirpath=r'W:\source\repos\agent\tests')
-        agent.load_job(filepath=r'W:\source\repos\agent\tests\job_a1.job')
+        agent.create_job(func=_test_func, name='job_a1', options=self.options)
+        agent.save_job(job=agent.get_job_by_name('job_a1'), dirpath=r'tests')
+        agent.load_job(filepath=r'tests/job_a1.job')
         job_a1 = agent.get_job_by_name('job_a1')
         job_a1_loaded = agent.get_job_by_name('job_a1 (1)')
         self.assertEqual(job_a1_loaded._func.__code__.co_code, job_a1._func.__code__.co_code)
 
     def test_dumps_and_loads(self):
         agent = Agent()
-        agent.create_job(func=test_func, name='job_a1', options=self.options)
+        agent.create_job(func=_test_func, name='job_a1', options=self.options)
         s = agent.dumps_job(job=agent.get_job_by_name('job_a1'))
         agent.loads_job(str=s)
         job_a1 = agent.get_job_by_name('job_a1')

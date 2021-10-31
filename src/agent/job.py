@@ -26,8 +26,9 @@ from threading import Thread, Event
 import datetime
 from inspect import signature
 from enum import Enum
-from agent.handler import Cnrt, JobFailHandler, JobSuccessHandler
-from agent.exceptions import JobNotRunning
+from src.agent.handler import Cnrt, JobFailHandler, JobSuccessHandler
+from src.agent.exceptions import JobNotRunning
+import inspect
 import logging
 
 logger = logging.getLogger(__name__)
@@ -48,8 +49,10 @@ class Job:
     def __str__(self):
         return f'name : {self.name} job_id : {self.id} agent : {self._agent}'
 
-    def __init__(self, agent, job_id, name, options, is_enable, **variables):
+    def __init__(self, agent, job_id, name, options, is_enable, args=None, kwargs=None, **variables):
         logger.info(msg=f'initializing job {name}')
+        stack = inspect.stack()
+        caller_class = stack[1][0].f_locals["self"].__class__
         self._id = job_id
         self._name = name
         self._agent = agent
@@ -67,6 +70,14 @@ class Job:
         self._is_not_running.set()
         self.is_enable = is_enable
         self.job_thread = threading.Thread()
+        if 'Agent' == caller_class.__name__:
+            self._kwargs = kwargs
+            if kwargs is None:
+                self._kwargs = {}
+            self._args = args
+            if args is None:
+                self._kwargs = ()
+            self.ready()
 
     def ready(self):
         self._initialized = True
@@ -81,6 +92,34 @@ class Job:
             'LastRuntime': None,
             'fail_count': self._fail_count
         })
+
+    def run(self, *args, **kwargs):
+        pass
+
+    def _job_run(self):
+        try:
+            self._is_not_running.clear()
+            logger.info(msg=f'starting job {self._name}')
+            self.next_run_time = self._calculate_next_run_time()
+            logger.info(msg=f'executing job {self._name} function')
+            self.status['last_return'] = self.run(*self._args, **self._kwargs)
+        except Exception as E:
+            print(E)
+            self._fail_count += 1
+            self.status['LastRunState'] = LastRuntimeState.failed
+            logger.error(msg=f'job: {self.name} Failed to Execute du\n', exc_info=True)
+            self._job_fail_handler(exception=E)
+            return 0
+        else:
+            self._fail_count = 0
+            self._job_success_handler()
+            logger.info(msg=f'job {self.name} execute successfully')
+            self.status['LastRunState'] = LastRuntimeState.success
+        finally:
+            self.status['LastRuntime'] = datetime.datetime.now()
+            self.update_status()
+            self._is_not_running.set()
+            logging.log(level=logging.DEBUG, msg=str(self.status))
 
     def stop(self, timeout: float = 10, silence_error=None):
         """
@@ -188,7 +227,7 @@ class Job:
 class FunctionJob(Job):
 
     def __init__(self, agent, job_id, name, func, options, is_enable, args, kwargs, **job_variables):
-        super().__init__(agent, job_id, name, options, is_enable, **job_variables)
+
         self._func = func
         self._args = args
 
@@ -204,6 +243,7 @@ class FunctionJob(Job):
                 'agent') is not None:
             self._kwargs = {**self._kwargs, **{'agent': agent}}
 
+        super().__init__(agent, job_id, name, options, is_enable, **job_variables)
         self.ready()
 
     def _job_run(self):

@@ -1,4 +1,4 @@
-Funniest
+Agent
 --------
 
 quick start ::

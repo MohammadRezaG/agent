@@ -15,7 +15,7 @@
 # ------------------------------------------------------------------------------
 # name: handler.py
 # Description: contain necessary Handler for job
-# Version: 0.1.3
+# Version: 0.1.4
 # Author: Mohammad Reza Golsorkhi
 # ------------------------------------------------------------------------------
 
@@ -24,9 +24,10 @@ import datetime
 import logging
 from inspect import signature
 
-from agent.exceptions import InvalidOption
-from agent.interrupt import RunJobNow
+from src.agent.exceptions import InvalidOption
+from src.agent.interrupt import RunJobNow
 from enum import Enum
+from typing import Dict
 
 
 class _BaseHandler:
@@ -45,9 +46,13 @@ class _BaseHandler:
         self.options = options
 
     def __call__(self, *args, **kwargs):
-        return self.func()
+        if self.func:
+            return self.func()
+        else:
+            raise RuntimeError('handler not created before running __call__')
 
-    def _custom_func_get_args_and_kwargs(self, func, pass_args: dict, custom_func_args=(), custom_func_kwargs={}):
+    def _custom_func_get_args_and_kwargs(self, func, pass_args: Dict[str, object], custom_func_args=(),
+                                         custom_func_kwargs=None):
         """
         this function return a tuple of args And kwargs
         use this function is not recommended for use outside of handler
@@ -56,6 +61,8 @@ class _BaseHandler:
         :param pass_args: name of args that if user want send to function
         :return: (args, kwargs)
         """
+        if custom_func_kwargs is None:
+            custom_func_kwargs = {}
         func_sig = signature(func)
         custom_func_args = custom_func_args
         custom_func_kwargs = custom_func_kwargs
@@ -142,7 +149,10 @@ class JobFailHandler(_BaseHandler):
             raise InvalidOption()
 
     def __call__(self, *args, **kwargs):
-        self.func(kwargs.get('exception', Exception('unknown Error')))
+        if self.func:
+            self.func(kwargs.get('exception', Exception('unknown Error')))
+        else:
+            raise RuntimeError('handler not created before running __call__')
 
     def _basics(self, exception: Exception):
         pass
@@ -202,9 +212,6 @@ class JobSuccessHandler(_BaseHandler):
             self.func = self._custom
         else:
             raise InvalidOption()
-
-    def __call__(self, *args, **kwargs):
-        self.func()
 
     def _basics(self):
         pass

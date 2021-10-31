@@ -25,7 +25,7 @@ options = {
 ```python
 import time
 
-from agent import Agent
+from src.agent import Agent
 
 agent = Agent()
 
@@ -42,9 +42,11 @@ def sample_job_every_5s():
 
 def sample_job_every_10s(massage, job):
     print(f'I am running whit massage {massage} and my name is {job.name}')
-agent.create_job(func = sample_job_every_10s, name='job2', options=options, args=('i am massage',))
 
-#run agent whit :
+
+agent.create_job(func=sample_job_every_10s, name='job2', options=options, args=('i am massage',))
+
+# run agent whit :
 agent.start()
 ```
 

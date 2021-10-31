@@ -24,9 +24,9 @@ import datetime
 import threading
 from time import sleep
 
-import agent.exceptions as exceptions
-import agent.interrupt as _interrupt
-from agent.job import FunctionJob, Job
+import src.agent.exceptions as exceptions
+import src.agent.interrupt as _interrupt
+from src.agent.job import FunctionJob, Job
 import logging
 from pathlib import Path
 
@@ -39,10 +39,12 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-def handle_error_no_dill ():
+
+def handle_error_no_dill():
     print(f"""
     dill in not installed
     """)
+
 
 class Agent:
     _name: str
@@ -201,6 +203,16 @@ class Agent:
             raise exceptions.DuplicateName('job name must be unique')
 
         self.jobs.append(FunctionJob(self, job_id, name, func, options, is_enable, args, kwargs, **job_variables))
+
+    def create_class_job(self, job, options: dict, args=(), kwargs=None, is_enable: bool = True, name: str = None,
+                         **job_variables):
+        job_id = Agent._get_new_job_id()
+        if name is None:
+            name = 'job_' + str(job_id)
+        if self.get_job_by_name(name) is not None:
+            raise exceptions.DuplicateName('job name must be unique')
+
+        self.jobs.append(job(self, job_id, name, options, is_enable, args, kwargs, **job_variables))
 
     def create_job(self, func, options: dict, args=(), kwargs=None, is_enable: bool = True, name: str = None,
                    **job_variables):

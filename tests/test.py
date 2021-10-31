@@ -24,7 +24,7 @@ import datetime
 import time
 from unittest import TestCase
 
-from agent.agent import Agent
+from src.agent import Agent, job
 
 
 def _test_func(t):
@@ -84,6 +84,28 @@ class TestAgent(TestCase):
         print(t)
         time.sleep(1)
         self.assertIn('in test func 1', t)
+        agent.stop()
+
+    def test_Job(self):
+        options = {
+            'scheduler': 'interval',
+            'start_time': datetime.datetime.now(),
+            'interval': 1
+        }
+
+        agent = Agent()
+        t = [1]
+        print('job_id IS ' + str(id(t)))
+
+        class J(job.Job):
+            def run(self, *args, **kwargs):
+                print('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+
+        agent.create_class_job(job=J, options=options)
+        agent.start()
+        #print(t)
+        time.sleep(10)
+        #self.assertIn('in test func 1', t)
         agent.stop()
 
     def test_agent_stop(self):
@@ -187,7 +209,7 @@ class TestAgent(TestCase):
         agent.stop()
 
     def test_job_restart_after_fail_force_restart_job(self):
-        from agent.handler import JobFailHandler
+        from src.agent.handler import JobFailHandler
 
         options = {
             'scheduler': 'interval',
@@ -233,7 +255,7 @@ class TestAgent(TestCase):
         self.assertEqual(job.status['jfh'], 3)
 
     def test_job_restart_after_fail_force_run_agent(self):
-        from agent.handler import JobFailHandler
+        from src.agent.handler import JobFailHandler
 
         options = {
             'scheduler': 'interval',

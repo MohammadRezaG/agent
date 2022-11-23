@@ -1,1 +1,7 @@
 /node_modules/
+/venv/
+/agent_Job_scheduler.egg-info/
+/.vscode/
+/.mypy_cache/
+/dist/
+/.idea/

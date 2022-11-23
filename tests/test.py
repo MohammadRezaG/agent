@@ -98,14 +98,19 @@ class TestAgent(TestCase):
         print('job_id IS ' + str(id(t)))
 
         class J(job.Job):
-            def run(self, *args, **kwargs):
-                print('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+            def run(self, t):
+                print('I am running')
+                c = t[0]
+                t.append('in test func {}'.format(str(c)))
+                t[0] += 1
+                time.sleep(9)
+                print(t)
 
-        agent.create_class_job(job=J, options=options)
+        agent.create_class_job(job=J, options=options, args=(t,))
         agent.start()
-        #print(t)
+        print(t)
         time.sleep(10)
-        #self.assertIn('in test func 1', t)
+        self.assertIn('in test func 1', t)
         agent.stop()
 
     def test_agent_stop(self):

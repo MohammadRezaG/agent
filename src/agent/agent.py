@@ -204,7 +204,7 @@ class Agent:
 
         self.jobs.append(FunctionJob(self, job_id, name, func, options, is_enable, args, kwargs, **job_variables))
 
-    def create_class_job(self, job, options: dict, args=(), kwargs=None, is_enable: bool = True, name: str = None,
+    def create_class_job(self, job, options, args=(), kwargs=None, is_enable: bool = True, name: str = None,
                          **job_variables):
         job_id = Agent._get_new_job_id()
         if name is None:
@@ -214,7 +214,7 @@ class Agent:
 
         self.jobs.append(job(self, job_id, name, options, is_enable, args, kwargs, **job_variables))
 
-    def create_job(self, func, options: dict, args=(), kwargs=None, is_enable: bool = True, name: str = None,
+    def create_job(self, func, options, args=(), kwargs=None, is_enable: bool = True, name: str = None,
                    **job_variables):
         self._add_job(func, options, is_enable, args, kwargs, name, **job_variables)
 
@@ -306,8 +306,8 @@ class Agent:
     @property
     def interrupt(self):
         """
-        you can active a interrupt whit .set() methode
-        :return:
+        you can active a interrupt with .set() methode
+        :return: interrupt
         """
         if not self._initialized:
             raise RuntimeError("Agent.__init__() not called")
